@@ -45,7 +45,7 @@ def save_state(state: dict) -> None:
         json.dump(state, f, ensure_ascii=False, indent=2)
 
 
-def call_fr24_api(endpoint: str, params: dict) -> list:
+def call_fr24_api(endpoint: str, params: dict):
     query_string = urllib.parse.urlencode(params)
     url = f"{BASE_URL}{endpoint}?{query_string}"
     req = urllib.request.Request(
@@ -54,6 +54,7 @@ def call_fr24_api(endpoint: str, params: dict) -> list:
             "Authorization": f"Bearer {FR24_TOKEN}",
             "Accept": "application/json",
             "Accept-Version": "v1",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         },
         method="GET",
     )
@@ -63,10 +64,10 @@ def call_fr24_api(endpoint: str, params: dict) -> list:
             return payload.get("data", [])
     except urllib.error.HTTPError as e:
         print(f"[API Error] HTTP {e.code}: {e.read().decode('utf-8', errors='ignore')}")
-        return []
+        return None
     except Exception as e:
         print(f"[Request Error] {e}")
-        return []
+        return None
 
 
 def send_notification(message: str) -> None:
@@ -176,3 +177,8 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+    data = call_fr24_api("/flight-summary/light", params)
+        if data is None:
+            print("API 請求失敗，保留狀態待下次重試。")
+            return
+        state["checked_dispatch"] = True

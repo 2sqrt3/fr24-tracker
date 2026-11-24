@@ -177,8 +177,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-    data = call_fr24_api("/flight-summary/light", params)
-        if data is None:
-            print("API 請求失敗，保留狀態待下次重試。")
-            return
-        state["checked_dispatch"] = True
+   

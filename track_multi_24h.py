@@ -105,7 +105,6 @@ def main() -> None:
     for reg in regs[:15]:
         reg_flights = [f for f in all_flights if (f.get("reg") or "").upper() == reg]
         if not reg_flights:
-            report_lines.append(f"\n• **`{reg}`**：過去 24 小時內無飛航訊號紀錄。")
             continue
 
         reg_flights.sort(key=lambda x: x.get("last_seen") or x.get("first_seen") or "", reverse=True)
@@ -115,7 +114,7 @@ def main() -> None:
             (f.get("orig_iata") == TARGET_AIRPORT or f.get("dest_iata") == TARGET_AIRPORT)
             for f in reg_flights
         )
-        badge = "🚨 **[TPE 現蹤]** " if tpe_hit else ""
+        badge = " **[TPE]** " if tpe_hit else ""
         flight_no = latest.get("flight") or latest.get("callsign") or "無航班號"
         ac_type = latest.get("type") or "未知機型"
         orig = latest.get("orig_iata") or "未知"

@@ -11,4 +11,18 @@
 Name：`FR24_API_TOKEN` ／ Secret：貼上你的 Flightradar24 API Token（測試階段可先放免費的 Sandbox Token）。\
 Name：`NOTIFY_WEBHOOK_URL` ／ Secret：貼上你的 Discord Webhook 網址（若暫時不設定，程式只會在執行紀錄中印出文字，不會報錯）。
 ## 追蹤特定飛機/航司
-### 設定
+### 模組名稱
+`track_fleet_tpe.py` 與`track_fleet_tpe.yml`/
+### 飛機與航司設置
+於`track_fleet_tpe.py`內\
+```
+# 1. 設定要追蹤的目標飛機註冊編號
+TARGET_REGISTRATIONS = [
+   #加入想追蹤的飛機註冊號
+]
+
+# 2. 設定要追蹤的目標航空公司 3 碼 ICAO 代碼
+TARGET_AIRLINES_ICAO = [
+    #加入想追蹤的航空公司 3 碼 ICAO 代碼
+]
+```

@@ -12,7 +12,7 @@ Name：`FR24_API_TOKEN` ／ Secret：貼上你的 Flightradar24 API Token（測�
 Name：`NOTIFY_WEBHOOK_URL` ／ Secret：貼上你的 Discord Webhook 網址（若暫時不設定，程式只會在執行紀錄中印出文字，不會報錯）。
 ## 追蹤特定飛機/航司
 ### 模組名稱
-`track_fleet_tpe.py` 與`track_fleet_tpe.yml`/
+`track_fleet_tpe.py` 與`track_fleet_tpe.yml`
 ### 飛機與航司設置
 於`track_fleet_tpe.py`內
 ```
@@ -49,3 +49,7 @@ schedule:
 # 設為 23.5 小時，避免隔天同一小時因排程提前數秒觸發而誤判仍在冷卻期
 COOLDOWN_HOURS = 23.5
 ```
+## 追蹤特定飛機是否在TPE地面
+### 模組名稱
+`track_multi_24h.py` 與`track_multi_24h.yml`
+### 飛機設置

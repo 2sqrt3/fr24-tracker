@@ -63,7 +63,7 @@ COOLDOWN_HOURS = 23.5
 }
 ```
 ### 偵測時間設置
-與前述相同，於`track_multi_24h.yml`內依需求修改
+與前述相同，於`track_multi_24h.yml`內依需求修改，本案為每天05:00偵測一次
 ## 追蹤特定航線有無飛機飛行
 ### 模組名稱
 `track_route.py` 與`track_route.yml`
@@ -87,6 +87,7 @@ ROUTE_CONFIG = {
 }
 ```
 ### 偵測時間設置
-與前述相同，於`track_routes.yml`內依需求修改，如需增設命中後冷卻機制，亦可於`track_route.py`設定
+與前述相同，於`track_routes.yml`內依需求修改，本案為每天05:00, 12:00, 16:00偵測一次\
+如需增設命中後冷卻機制，亦可於`track_route.py`設定
 ## 追蹤特定航班號有無飛機飛行
 ### 模組名稱

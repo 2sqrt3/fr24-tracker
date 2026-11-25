@@ -9,7 +9,7 @@
 **追蹤特定航班號有無飛機飛行**，例如*ANA9415*號航班
 ## 環境設定
 Name：`FR24_API_TOKEN` ／ Secret：貼上 Flightradar24 API Token（測試階段可先放免費的 Sandbox Token）。\
-Name：`NOTIFY_WEBHOOK_URL` ／ Secret：貼上 Discord Webhook 網址（若暫時不設定，程式只會在執行紀錄中印出文字，不會報錯）。
+Name：`NOTIFY_WEBHOOK_URL` ／ Secret：貼上 Discord Webhook 網址（若暫時不設定，程式只會在執行紀錄中印出文字，不會報錯）。\
 **設定位置**：Settings>Security and quality>Secrets and quality>Actions>Repository secrets>New repository secrets
 ## 追蹤特定飛機/航司
 ### 模組名稱

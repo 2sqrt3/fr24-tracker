@@ -17,18 +17,10 @@ Name：`NOTIFY_WEBHOOK_URL` ／ Secret：貼上你的 Discord Webhook 網址（�
 於`track_fleet_tpe.py`內
 ```
 # 1. 設定要追蹤的目標飛機註冊編號
-TARGET_REGISTRATIONS = [ #加入想追蹤的飛機註冊號]
+TARGET_REGISTRATIONS = ["JA787A", #加入想追蹤的飛機註冊號]
 
 # 2. 設定要追蹤的目標航空公司 3 碼 ICAO 代碼（可逗號擴充多間）
-TARGET_AIRLINES_ICAO = [ #加入想追蹤的航空公司 3 碼 ICAO 代碼]
-```
-例如
-```
-# 1. 設定要追蹤的目標飛機註冊編號
-TARGET_REGISTRATIONS = ["JA787A", "B-18001","D-ABPB"]
-
-# 2. 設定要追蹤的目標航空公司 3 碼 ICAO 代碼（可逗號擴充多間）
-TARGET_AIRLINES_ICAO = [ "BAW", "ANA", "GTI"]
+TARGET_AIRLINES_ICAO = [ "BAW", #加入想追蹤的航空公司 3 碼 ICAO 代碼]
 ```
 ### 偵測時間設置
 於`track_fleet_tpe.yml`內依需求修改，本案為周一至周五固定由05:00、06:00、07:00、16:00、17:00偵測；周六及周日於07:00至17:00每小時偵測，且當成功命中加入23.5小時冷卻機制
@@ -78,10 +70,10 @@ COOLDOWN_HOURS = 23.5
 #   2. "exclude_flights" ：填入特定排除的「航班號」或「呼號」（如 CI82, CAL82）
 # ==============================================================================
 ROUTE_CONFIG = {
-範例於此
     "ANC-TPE": {
         "exclude_airlines": ["CAL", "EVA", "SJX"],
         "exclude_flights": ["5X500","UPS500"],
+ #在這邊新增想查詢之編號與排除條件
     },
 在這邊新增航線、排除航司或航班號
 }
@@ -91,3 +83,16 @@ ROUTE_CONFIG = {
 如需增設命中後冷卻機制，亦可於`track_route.py`設定
 ## 追蹤特定航班號有無飛機飛行
 ### 模組名稱
+`track_summary.py` 與`track_summary.yml`
+### 飛機設置
+於`track_route.py`內依需求修改，加入想要追蹤的航線，得設定排除條件
+```
+# ==========================================
+# 在此維護要監控的 ICAO 呼號清單（可隨時增減）
+# ==========================================
+TARGET_CALLSIGNS = [
+    "ANA9415",
+    #在這邊新增想查詢之編號
+]
+### 偵測時間設置
+與前述相同，於`track_routes.yml`內依需求修改，本案為每天05:00、06:00、07:00、16:00、17:00偵測一次

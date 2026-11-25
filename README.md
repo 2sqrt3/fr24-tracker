@@ -51,5 +51,20 @@ COOLDOWN_HOURS = 23.5
 ```
 ## 追蹤特定飛機是否在TPE地面
 ### 模組名稱
-`track_multi_24h.py` 與`track_multi_24h.yml`
+`track_multi_24h.py` 與`track_multi_24h.yml` 與 `targets.json`
+### 飛機設置
+於`targets.json`內依需求修改
+```
+{
+  "registrations": [ #輸入想要追蹤的飛機編號
+    "OE-LPF",
+    "PH-TFJ",
+  ]
+}
+```
+### 偵測時間設置
+與前述相同，於`track_multi_24h.yml`內依需求修改
+## 追蹤特定航線有無飛機飛行
+### 模組名稱
+`track_route.py` 與`track_route.yml`
 ### 飛機設置

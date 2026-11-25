@@ -1,0 +1,28 @@
+name: Track Watchlist (24h Lookback)
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # 每天台灣時間 05:00 (UTC 21:00) 執行一次
+    - cron: '0 21 * * *'
+
+jobs:
+  check-watchlist-24h:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run 24h watchlist tracker
+        env:
+          FR24_API_TOKEN: ${{ secrets.FR24_API_TOKEN }}
+          NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
+        run: python track_multi_24h.py

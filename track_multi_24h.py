@@ -120,7 +120,7 @@ def main() -> None:
         orig = latest.get("orig_iata") or "未知"
         dest = latest.get("dest_iata") or "未知"
         last_seen_tpe = to_taipei_str(latest.get("last_seen"))
-        ended = "已降落" if latest.get("flight_ended") else "最後訊號仍在空中"
+        ended = "地面" if latest.get("flight_ended") else "空中"
 
         report_lines.append(
             f"\n• {badge}**`{reg}`**（`{ac_type}`｜共 `{len(reg_flights)}` 趟）\n"

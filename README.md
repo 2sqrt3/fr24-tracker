@@ -1,4 +1,7 @@
 # fr24-tracker
 ### 基本功能
-程式利用呼叫**flightradar api** 擷取特定航班資料，並以**discord**通知使用者
-The background color is `#ffffff` for light mode and `#000000` for dark mode.
+程式利用呼叫**flightradar api** 擷取特定航班資料，並以**discord**通知使用者/
+程式會定期定時調閱api資料庫，提供三大功能資料：/
+**追蹤特定飛機/航司不特定飛機是否前往TPE**，例如--JA787A--或--ANA--在前往台北路上/
+**追蹤特定航線有無飛機飛行**，例如--LHR-TPE--航線/
+**追蹤特定航班號有無飛機飛行**，例如--ANA9415--號航班/

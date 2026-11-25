@@ -5,6 +5,9 @@ import urllib.parse
 import urllib.error
 from datetime import datetime, timezone, timedelta
 
+# 1. 匯入獨立的 JetPhotos 抓圖模組
+from jetphotos_fetcher import get_latest_jetphotos
+
 FR24_TOKEN = os.environ.get("FR24_API_TOKEN", "")
 WEBHOOK_URL = os.environ.get("NOTIFY_WEBHOOK_URL", "")
 BASE_URL = "https://fr24api.flightradar24.com/api"
@@ -40,7 +43,6 @@ def load_notified_ids() -> dict:
         try:
             with open(STATE_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                # 自動清理超過 7 天的舊紀錄，保持快取輕量
                 cutoff = (datetime.now(timezone.utc) - timedelta(days=7)).timestamp()
                 return {k: v for k, v in data.items() if v > cutoff}
         except Exception:
@@ -83,12 +85,21 @@ def call_fr24_api(endpoint: str, params: dict):
         return None
 
 
-def send_notification(message: str) -> None:
+# 2. 擴充通知函式，支援同時附加多張 Discord Embed 照片卡片
+def send_notification(message: str, embeds: list[dict] | None = None) -> None:
     if not WEBHOOK_URL:
         print(f"[模擬通知]\n{message}")
+        if embeds:
+            for e in embeds:
+                print(f"[模擬附圖] {e.get('title')} -> {e.get('image', {}).get('url')}")
         return
 
-    data = json.dumps({"content": message}).encode("utf-8")
+    payload: dict = {"content": message}
+    if embeds:
+        # Discord 單則訊息上限為 10 張 Embeds
+        payload["embeds"] = embeds[:10]
+
+    data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         WEBHOOK_URL,
         data=data,
@@ -110,7 +121,6 @@ def main() -> None:
     now_tpe = get_taipei_now()
     time_str = now_tpe.strftime("%Y-%m-%d %H:%M")
 
-    # 查詢過去 24 小時內的飛航摘要，避免跨時段漏抓
     dt_from = (now_utc - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%S")
     dt_to = now_utc.strftime("%Y-%m-%dT%H:%M:%S")
 
@@ -118,7 +128,6 @@ def main() -> None:
     notified_ids = load_notified_ids()
     new_flights = []
 
-    # FR24 API 單次最多支援 15 組逗號分隔呼號
     for batch in chunk_list(TARGET_CALLSIGNS, 15):
         params = {
             "callsigns": ",".join(batch),
@@ -143,11 +152,14 @@ def main() -> None:
         return
 
     lines = [f"📡 **不定期／特定航班飛航偵測 ({time_str})**"]
+    embeds = []
+
     for f in new_flights:
         callsign = f.get("callsign") or "N/A"
         flight_no = f.get("flight") or "無航班號"
         ac_type = f.get("type") or "未知機型"
-        reg = f.get("reg") or "未知機號"
+        raw_reg = f.get("reg")  # 直接從 API 回傳的字典中擷取機身註冊編號 (如 "JA794A")
+        reg_display = raw_reg or "未知機號"
         orig = f.get("orig_iata") or f.get("orig_icao") or "未知"
         dest = f.get("dest_iata") or f.get("dest_icao") or "未知"
         takeoff = format_utc_to_tpe(f.get("datetime_takeoff"))
@@ -155,12 +167,26 @@ def main() -> None:
 
         lines.append(
             f"- **呼號 / 航班**：`{callsign}` (`{flight_no}`)\n"
-            f"  **機型 / 註冊號**：`{ac_type}` / `{reg}`\n"
+            f"  **機型 / 註冊號**：`{ac_type}` / `{reg_display}`\n"
             f"  **航線**：`{orig}` → `{dest}`\n"
             f"  **起飛 / 降落**：{takeoff} ～ {landed}"
         )
 
-    send_notification("\n".join(lines))
+        # 3. 只要有抓到有效的註冊編號 (如 JA794A)，就自動呼叫 jetphotos_fetcher 抓圖
+        if raw_reg:
+            photo = get_latest_jetphotos(raw_reg)
+            if photo["image_url"]:
+                embeds.append(
+                    {
+                        "title": f"{photo['registration']} ({ac_type}) — {callsign} 最新照片",
+                        "url": photo["page_url"],
+                        "color": 3447003,
+                        "image": {"url": photo["image_url"]},
+                        "footer": {"text": "Photo via JetPhotos.com"},
+                    }
+                )
+
+    send_notification("\n".join(lines), embeds=embeds)
     save_notified_ids(notified_ids)
 
 

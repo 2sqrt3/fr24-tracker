@@ -1,0 +1,46 @@
+name: Track Irregular Flights (Summary)
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # 台灣時間 05:00, 06:00, 07:00 (UTC 21:00, 22:00, 23:00)
+    - cron: '0 21,22,23 * * *'
+    # 台灣時間 16:00, 17:00 (UTC 08:00, 09:00)
+    - cron: '0 8,9 * * *'
+
+jobs:
+  check-summary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # 讀取已通知過的 fr24_id 快取，防止同一航班重複推播
+      - name: Restore summary state cache
+        uses: actions/cache/restore@v4
+        with:
+          path: summary_state.json
+          key: summary-state-${{ github.run_id }}
+          restore-keys: |
+            summary-state-
+
+      - name: Run flight summary tracker
+        env:
+          FR24_API_TOKEN: ${{ secrets.FR24_API_TOKEN }}
+          NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
+        run: python track_summary.py
+
+      - name: Save summary state cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: summary_state.json
+          key: summary-state-${{ github.run_id }}

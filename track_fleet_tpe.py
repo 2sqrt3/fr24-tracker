@@ -5,6 +5,9 @@ import urllib.parse
 import urllib.error
 from datetime import datetime, timezone, timedelta
 
+# 1. 匯入獨立的 JetPhotos 抓圖模組（需與本程式放在同一個資料夾）
+from jetphotos_fetcher import get_latest_jetphotos
+
 FR24_TOKEN = os.environ.get("FR24_API_TOKEN", "")
 WEBHOOK_URL = os.environ.get("NOTIFY_WEBHOOK_URL", "")
 BASE_URL = "https://fr24api.flightradar24.com/api"
@@ -18,10 +21,12 @@ TARGET_REGISTRATIONS = [
     "N527DN",
     "N522DZ",
     "N521DN",
+    "B-50018",
+    
 ]
 # 2. 設定要追蹤的目標航空公司 3 碼 ICAO 代碼（可逗號擴充多間）
 TARGET_AIRLINES_ICAO = [
-    "BAW","AUA","TUI","DLH","NOS",
+    "BAW", "AUA", "TUI", "DLH", "NOS",
 ]
 
 COOLDOWN_HOURS = 23.5
@@ -86,12 +91,21 @@ def call_fr24_api(endpoint: str, params: dict):
         return None
 
 
-def send_notification(message: str) -> None:
+# 2. 擴充通知函式，支援同時附加多張 Discord Embed 照片卡片
+def send_notification(message: str, embeds: list[dict] | None = None) -> None:
     if not WEBHOOK_URL:
         print(f"[模擬通知]\n{message}")
+        if embeds:
+            for e in embeds:
+                print(f"[模擬附圖] {e.get('title')} -> {e.get('image', {}).get('url')}")
         return
 
-    data = json.dumps({"content": message}).encode("utf-8")
+    payload: dict = {"content": message}
+    if embeds:
+        # Discord 單則訊息上限為 10 張 Embeds
+        payload["embeds"] = embeds[:10]
+
+    data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         WEBHOOK_URL,
         data=data,
@@ -122,6 +136,29 @@ def format_flight_line(f: dict, tag: str) -> str:
     )
 
 
+# 3. 依據航班字典中的 reg 抓取 JetPhotos 最新照片並組成 Discord Embed 卡片
+def build_jetphotos_embed(f: dict) -> dict | None:
+    raw_reg = (f.get("reg") or "").strip().upper()
+    if not raw_reg or raw_reg == "UNKNOWN":
+        return None
+
+    photo = get_latest_jetphotos(raw_reg)
+    if not photo["image_url"]:
+        return None
+
+    ac_type = f.get("type") or "未知機型"
+    orig = f.get("orig_iata") or f.get("orig_icao") or "未知出發地"
+    flight_no = f.get("flight") or f.get("callsign") or "無航班號"
+
+    return {
+        "title": f"{photo['registration']} ({ac_type}) — {orig} → TPE ({flight_no})",
+        "url": photo["page_url"],
+        "color": 3447003,
+        "image": {"url": photo["image_url"]},
+        "footer": {"text": "Photo via JetPhotos.com"},
+    }
+
+
 def main() -> None:
     if not FR24_TOKEN:
         raise ValueError("缺少 FR24_API_TOKEN 環境變數")
@@ -131,9 +168,10 @@ def main() -> None:
     cooldowns = load_cooldowns()
     cleaned_cooldowns = {}
     notify_lines = []
+    embeds = []
 
     # ====================================================
-    # 任務 A：查詢 10 架指定機號飛往 TPE（先剔除冷卻名單）
+    # 任務 A：查詢指定機號飛往 TPE（先剔除冷卻名單）
     # ====================================================
     active_regs = []
     for reg in TARGET_REGISTRATIONS:
@@ -155,6 +193,9 @@ def main() -> None:
                 reg = (f.get("reg") or f.get("fr24_id") or "UNKNOWN").strip().upper()
                 cleaned_cooldowns[reg] = now_tpe.isoformat()
                 notify_lines.append(format_flight_line(f, "指定機號"))
+                embed = build_jetphotos_embed(f)
+                if embed:
+                    embeds.append(embed)
     else:
         print(f"[{time_str}] 所有指定機號皆在冷卻期內，跳過任務 A。")
 
@@ -172,19 +213,25 @@ def main() -> None:
             for f in airline_data:
                 # 優先以機號作為冷卻鍵值（與任務 A 共用，避免重複通知），無機號時退回 fr24_id
                 cooldown_key = (f.get("reg") or f.get("fr24_id") or "").strip().upper()
-                if cooldown_key and is_in_cooldown(cooldown_key, cooldowns, now_tpe, cleaned_cooldowns):
+                if cooldown_key and (
+                    cooldown_key in cleaned_cooldowns
+                    or is_in_cooldown(cooldown_key, cooldowns, now_tpe, cleaned_cooldowns)
+                ):
                     print(f"[冷卻略過] 目標航空航班 {cooldown_key} 已於 24 小時內通知過")
                     continue
                 if cooldown_key:
                     cleaned_cooldowns[cooldown_key] = now_tpe.isoformat()
                 notify_lines.append(format_flight_line(f, f"目標航空 {airline_param}"))
+                embed = build_jetphotos_embed(f)
+                if embed:
+                    embeds.append(embed)
 
     # 儲存最新冷卻狀態並發送整合通知
     save_cooldowns(cleaned_cooldowns)
 
     if notify_lines:
         header = f"🛬 **TPE 特定航班偵測通知 ({time_str})**\n"
-        send_notification(header + "\n".join(notify_lines))
+        send_notification(header + "\n".join(notify_lines), embeds=embeds)
     else:
         print(f"[{time_str}] 本次檢查無新增命中航班。")
 

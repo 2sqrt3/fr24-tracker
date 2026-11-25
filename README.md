@@ -17,12 +17,16 @@ Name：`NOTIFY_WEBHOOK_URL` ／ Secret：貼上你的 Discord Webhook 網址（�
 於`track_fleet_tpe.py`內\
 ```
 # 1. 設定要追蹤的目標飛機註冊編號
-TARGET_REGISTRATIONS = [
-   #加入想追蹤的飛機註冊號
-]
+TARGET_REGISTRATIONS = [ #加入想追蹤的飛機註冊號]
 
-# 2. 設定要追蹤的目標航空公司 3 碼 ICAO 代碼
-TARGET_AIRLINES_ICAO = [
-    #加入想追蹤的航空公司 3 碼 ICAO 代碼
-]
+# 2. 設定要追蹤的目標航空公司 3 碼 ICAO 代碼（可逗號擴充多間）
+TARGET_AIRLINES_ICAO = [ #加入想追蹤的航空公司 3 碼 ICAO 代碼]
+```
+例如\
+```
+# 1. 設定要追蹤的目標飛機註冊編號
+TARGET_REGISTRATIONS = ["JA787A", "B-18001","D-ABPB"]
+
+# 2. 設定要追蹤的目標航空公司 3 碼 ICAO 代碼（可逗號擴充多間）
+TARGET_AIRLINES_ICAO = [ "BAW","ANA", "GTI"]
 ```

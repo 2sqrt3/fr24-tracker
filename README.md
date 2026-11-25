@@ -14,7 +14,7 @@ Name：`NOTIFY_WEBHOOK_URL` ／ Secret：貼上你的 Discord Webhook 網址（�
 ### 模組名稱
 `track_fleet_tpe.py` 與`track_fleet_tpe.yml`/
 ### 飛機與航司設置
-於`track_fleet_tpe.py`內\
+於`track_fleet_tpe.py`內
 ```
 # 1. 設定要追蹤的目標飛機註冊編號
 TARGET_REGISTRATIONS = [ #加入想追蹤的飛機註冊號]
@@ -22,11 +22,30 @@ TARGET_REGISTRATIONS = [ #加入想追蹤的飛機註冊號]
 # 2. 設定要追蹤的目標航空公司 3 碼 ICAO 代碼（可逗號擴充多間）
 TARGET_AIRLINES_ICAO = [ #加入想追蹤的航空公司 3 碼 ICAO 代碼]
 ```
-例如\
+例如
 ```
 # 1. 設定要追蹤的目標飛機註冊編號
 TARGET_REGISTRATIONS = ["JA787A", "B-18001","D-ABPB"]
 
 # 2. 設定要追蹤的目標航空公司 3 碼 ICAO 代碼（可逗號擴充多間）
-TARGET_AIRLINES_ICAO = [ "BAW","ANA", "GTI"]
+TARGET_AIRLINES_ICAO = [ "BAW", "ANA", "GTI"]
+```
+### 偵測時間設置
+於`track_fleet_tpe.yml`內依需求修改，本案為周一至周五固定由05:00、06:00、07:00、16:00、17:00偵測；周六及周日於07:00至17:00每小時偵測，且當成功命中加入23.5小時冷卻機制
+```
+schedule:
+    # 【平日週一至週五】台灣時間 05:00, 06:00, 07:00 -> 對應 UTC 週日至週四 21:00, 22:00, 23:00
+    - cron: '0 21,22,23 * * 0-4'
+    # 【平日週一至週五】台灣時間 16:00, 17:00 -> 對應 UTC 週一至週五 08:00, 09:00
+    - cron: '0 8,9 * * 1-5'
+
+    # 【週末週六與週日】台灣時間 07:00 -> 對應 UTC 週五與週六 23:00
+    - cron: '0 23 * * 5,6'
+    # 【週末週六與週日】台灣時間 08:00 至 17:00 每小時 -> 對應 UTC 週六與週日 00:00 至 09:00
+    - cron: '0 0-9 * * 6,0'
+```
+若自訂義冷卻時數，則於`track_fleet_tpe.py`內依需求修改，本案為23.5小時
+```
+# 設為 23.5 小時，避免隔天同一小時因排程提前數秒觸發而誤判仍在冷卻期
+COOLDOWN_HOURS = 23.5
 ```

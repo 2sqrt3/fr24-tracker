@@ -5,6 +5,9 @@ import urllib.parse
 import urllib.error
 from datetime import datetime, timezone, timedelta
 
+# 1. 匯入獨立的 JetPhotos 抓圖模組（需與本程式放在同一個資料夾）
+from jetphotos_fetcher import get_latest_jetphotos
+
 FR24_TOKEN = os.environ.get("FR24_API_TOKEN", "")
 WEBHOOK_URL = os.environ.get("NOTIFY_WEBHOOK_URL", "")
 BASE_URL = "https://fr24api.flightradar24.com/api"
@@ -19,7 +22,7 @@ BASE_URL = "https://fr24api.flightradar24.com/api"
 ROUTE_CONFIG = {
     "ANC-TPE": {
         "exclude_airlines": ["CAL", "EVA", "SJX"],
-        "exclude_flights": ["5X500","UPS500"],
+        "exclude_flights": ["5X500", "UPS500"],
     },
     "LHR-TPE": {
         "exclude_airlines": ["CAL"],
@@ -36,24 +39,23 @@ ROUTE_CONFIG = {
     "MXP-TPE": {
         "exclude_airlines": ["CAL", "EVA", "SJX"],
         "exclude_flights": [],
-       },
+    },
     "GUM-TPE": {
         "exclude_airlines": ["CAL", "UAL"],
         "exclude_flights": [],
     },
-   "LGW-TPE": {
+    "LGW-TPE": {
         "exclude_airlines": ["CAL", "EVA"],
         "exclude_flights": [],
     },
-   "VIE-TPE": {
+    "VIE-TPE": {
         "exclude_airlines": ["CAL", "EVA", "SJX"],
         "exclude_flights": [],
     },
-   "BKK-TPE": {
+    "BKK-TPE": {
         "exclude_airlines": ["CAL", "EVA", "THA", "SJX"],
         "exclude_flights": [],
     },
-      
 }
 
 
@@ -86,12 +88,21 @@ def call_fr24_api(endpoint: str, params: dict):
         return None
 
 
-def send_notification(message: str) -> None:
+# 2. 擴充通知函式，支援同時附加多張 Discord Embed 照片卡片
+def send_notification(message: str, embeds: list[dict] | None = None) -> None:
     if not WEBHOOK_URL:
         print(f"[模擬通知]\n{message}")
+        if embeds:
+            for e in embeds:
+                print(f"[模擬附圖] {e.get('title')} -> {e.get('image', {}).get('url')}")
         return
 
-    data = json.dumps({"content": message}).encode("utf-8")
+    payload: dict = {"content": message}
+    if embeds:
+        # Discord 單則訊息上限為 10 張 Embeds
+        payload["embeds"] = embeds[:10]
+
+    data = json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         WEBHOOK_URL,
         data=data,
@@ -165,8 +176,9 @@ def main() -> None:
 
         matched_by_route[route_key].append(f)
 
-    # 組合通知訊息
+    # 組合通知訊息與 JetPhotos 照片卡片
     lines = [f"✈️ **指定航線特殊航班偵測 ({time_str})**"]
+    embeds = []
     total_matched = 0
 
     for route_key, flights in matched_by_route.items():
@@ -178,7 +190,8 @@ def main() -> None:
             flight_no = f.get("flight") or "無航班號(貨機/包機)"
             callsign = f.get("callsign") or "N/A"
             ac_type = f.get("type") or "未知機型"
-            reg = f.get("reg") or "未知機號"
+            raw_reg = (f.get("reg") or "").strip()
+            reg_display = raw_reg or "未知機號"
             lat = f.get("lat")
             lon = f.get("lon")
             alt = f.get("alt")
@@ -186,15 +199,30 @@ def main() -> None:
 
             lines.append(
                 f"- **航班 / 呼號**：`{flight_no}` / `{callsign}`\n"
-                f"  **機型 / 註冊號**：`{ac_type}` / `{reg}`\n"
+                f"  **機型 / 註冊號**：`{ac_type}` / `{reg_display}`\n"
                 f"  **位置與動態**：({lat}, {lon})｜高度 `{alt} ft`｜地速 `{gspeed} kts`"
             )
+
+            # 3. 取得有效註冊編號時，呼叫共用模組抓取 JetPhotos 最新照片
+            if raw_reg:
+                photo = get_latest_jetphotos(raw_reg)
+                if photo["image_url"]:
+                    ident_label = f.get("flight") or callsign
+                    embeds.append(
+                        {
+                            "title": f"{photo['registration']} ({ac_type}) — {route_key} / {ident_label}",
+                            "url": photo["page_url"],
+                            "color": 3447003,
+                            "image": {"url": photo["image_url"]},
+                            "footer": {"text": "Photo via JetPhotos.com"},
+                        }
+                    )
 
     if total_matched == 0:
         print(f"[{time_str}] 所有監控航線皆無符合條件的特殊航班。")
         return
 
-    send_notification("\n".join(lines))
+    send_notification("\n".join(lines), embeds=embeds)
 
 
 if __name__ == "__main__":

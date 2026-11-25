@@ -1,0 +1,52 @@
+name: Track 10-Aircraft Fleet Inbound TPE
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # 【平日週一至週五】台灣時間 05:00, 06:00, 07:00 -> 對應 UTC 週日至週四 21:00, 22:00, 23:00
+    - cron: '0 21,22,23 * * 0-4'
+    # 【平日週一至週五】台灣時間 16:00, 17:00 -> 對應 UTC 週一至週五 08:00, 09:00
+    - cron: '0 8,9 * * 1-5'
+
+    # 【週末週六與週日】台灣時間 07:00 -> 對應 UTC 週五與週六 23:00
+    - cron: '0 23 * * 5,6'
+    # 【週末週六與週日】台灣時間 08:00 至 17:00 每小時 -> 對應 UTC 週六與週日 00:00 至 09:00
+    - cron: '0 0-9 * * 6,0'
+
+jobs:
+  track-fleet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      # 讀取各機號的 24 小時冷卻紀錄
+      - name: Restore cooldown cache
+        uses: actions/cache/restore@v4
+        with:
+          path: fleet_cooldown.json
+          key: fleet-cooldown-${{ github.run_id }}
+          restore-keys: |
+            fleet-cooldown-
+
+      - name: Run fleet tracker
+        env:
+          FR24_API_TOKEN: ${{ secrets.FR24_API_TOKEN }}
+          NOTIFY_WEBHOOK_URL: ${{ secrets.NOTIFY_WEBHOOK_URL }}
+        run: python track_fleet_tpe.py
+
+      # 儲存更新後的冷卻紀錄
+      - name: Save cooldown cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: fleet_cooldown.json
+          key: fleet-cooldown-${{ github.run_id }}

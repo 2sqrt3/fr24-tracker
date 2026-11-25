@@ -21,7 +21,7 @@ TARGET_REGISTRATIONS = [
 ]
 # 2. 設定要追蹤的目標航空公司 3 碼 ICAO 代碼（可逗號擴充多間）
 TARGET_AIRLINES_ICAO = [
-    "BAW","AUA","TUI","DLH","NOS",
+    "BAW","AUA","TUI","DLH","NOS","KAL"
 ]
 
 COOLDOWN_HOURS = 23.5

@@ -3,10 +3,10 @@
 程式利用呼叫**flightradar24 api** 擷取特定航班資料，並以**discord**通知使用者\
 程式會定期定時調閱api資料庫，提供四大功能資料：\
 \
-**追蹤特定飛機/航司不特定飛機是否前往TPE**，例如*JA787A*或*ANA*\
-**追蹤特定飛機是否在TPE地面**，例如*JA787A*\
-**追蹤特定航線有無飛機飛行**，例如*LHR-TPE*航線\
-**追蹤特定航班號有無飛機飛行**，例如*ANA9415*號航班
+**追蹤特定飛機/航司不特定飛機是否前往TPE**：`track_fleet_tpe`，例如*JA787A*或*ANA*\
+**追蹤特定飛機是否在TPE地面**：`track_multi_24h`，例如*JA787A*\
+**追蹤特定航線有無飛機飛行**：`track_route`，例如*LHR-TPE*航線\
+**追蹤特定航班號有無飛機飛行**：`track_summary`，例如*ANA9415*號航班
 ## 環境設定
 Name：`FR24_API_TOKEN` ／ Secret：貼上 Flightradar24 API Token（測試階段可先放免費的 Sandbox Token）。\
 Name：`NOTIFY_WEBHOOK_URL` ／ Secret：貼上 Discord Webhook 網址（若暫時不設定，程式只會在執行紀錄中印出文字，不會報錯）。\

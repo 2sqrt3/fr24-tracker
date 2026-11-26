@@ -50,7 +50,7 @@ ROUTE_CONFIG = {
         "exclude_flights": [],
     },
    "BKK-TPE": {
-        "exclude_airlines": ["CAL", "EVA", "THA", "SJX"],
+        "exclude_airlines": ["CAL", "EVA", "THA", "SJX", "TVJ", "AIQ"],
         "exclude_flights": [],
     },
       

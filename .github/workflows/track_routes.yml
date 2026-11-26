@@ -24,7 +24,18 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+#診斷實際觸發來源
+      - name: Diagnose schedule
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Schedule: ${{ github.event.schedule }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Branch: ${{ github.ref }}"
+          echo "UTC: $(date -u)"
+          echo "Taipei: $(TZ=Asia/Taipei date)"
 
+          
       - name: Run multi-route tracker
         env:
           FR24_API_TOKEN: ${{ secrets.FR24_API_TOKEN }}

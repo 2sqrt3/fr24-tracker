@@ -13,7 +13,18 @@ jobs:
   check-summary:
     runs-on: ubuntu-latest
     timeout-minutes: 3
-
+    
+    #診斷
+      - name: Diagnose Schedule Event
+        run: |
+          echo "Event: ${{ github.event_name }}"
+          echo "Actual Schedule: ${{ github.event.schedule }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "UTC: $(date -u)"
+          echo "Taipei: $(TZ=Asia/Taipei date)"
+          #診斷
+          
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4

@@ -5,7 +5,7 @@
 \
 **追蹤特定飛機/航司不特定飛機是否前往TPE**：`track_fleet_tpe`，ACTIONS`Track 10-Aircraft Fleet Inbound TPE`，例如*JA787A*或*ANA*\
 **追蹤特定飛機是否在TPE地面**：`track_multi_24h`，ACTIONS`Track Watchlist (24h Lookback) `，例如*JA787A*\
-**追蹤特定航線有無飛機飛行**：`track_route`，ACTIONS`Track Multi-Routes to TPE`，例如*LHR-TPE*航線\
+**追蹤特定航線有無飛機飛行**：`track_routes`，ACTIONS`Track Multi-Routes to TPE`，例如*LHR-TPE*航線\
 **追蹤特定航班號有無飛機飛行**：`track_summary`，ACTIONS`Track Irregular Flights (Summary) `，例如*ANA9415*號航班
 ## 環境設定
 Name：`FR24_API_TOKEN` ／ Secret：貼上 Flightradar24 API Token（測試階段可先放免費的 Sandbox Token）。\
@@ -63,9 +63,9 @@ COOLDOWN_HOURS = 23.5
 追蹤特定飛機是否在TPE地面，據以估算起飛時間；惟因每日偵測一次，系統通知時該機可能已經離場
 ## 追蹤特定航線有無飛機飛行
 ### 模組名稱
-`track_route.py` 與`track_route.yml`
+`track_routes.py` 與`track_routes.yml`
 ### 飛機設置
-於`track_route.py`內依需求修改，加入想要追蹤的航線，得設定排除條件
+於`track_routes.py`內依需求修改，加入想要追蹤的航線，得設定排除條件
 ```
 # ==============================================================================
 # 【航線與排除規則設定區】— 修改此區塊可新增或刪除條件
@@ -87,7 +87,7 @@ ROUTE_CONFIG = {
 得知某些特定航線如LGW-TPE航線，當未知航班號時亦能得知是否有飛機航行，並去除非必要資訊
 ### 偵測時間設置
 與前述相同，於`track_routes.yml`內依需求修改，本案為每天05:00、12:00、16:00偵測一次\
-如需增設命中後冷卻機制，亦可於`track_route.py`設定
+如需增設命中後冷卻機制，亦可於`track_routes.py`設定
 ## 追蹤特定航班號有無飛機飛行
 ### 模組名稱
 `track_summary.py` 與`track_summary.yml`
